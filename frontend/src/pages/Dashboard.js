@@ -131,10 +131,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="glass-card p-6" data-testid="mining-status-card">
+      <div className="glass-card p-4 sm:p-6" data-testid="mining-status-card">
         <div className="flex items-center gap-3 mb-4">
-          <TrendingUp className="w-6 h-6 text-primary" />
-          <h2 className="text-xl font-unbounded font-bold text-white">Mining Status</h2>
+          <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+          <h2 className="text-lg sm:text-xl font-unbounded font-bold text-white">Mining Status</h2>
         </div>
         {activeSession ? (
           <div className="bg-primary/10 border border-primary/30 p-4">
