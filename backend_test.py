@@ -235,7 +235,7 @@ class XRPMiningAPITester:
         
         self.token = original_token
         # For this test, we expect failure (401), so success means the test passed
-        return not success  # Invert because we expect 401
+        return success  # We expect 401, which means the test passed
 
 def main():
     print("🚀 Starting XRP Mining API Tests...")
