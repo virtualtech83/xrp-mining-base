@@ -118,19 +118,19 @@ export default function MiningPage() {
   };
 
   return (
-    <div className="space-y-6" data-testid="mining-page">
+    <div className="space-y-4 sm:space-y-6" data-testid="mining-page">
       <div>
-        <h1 className="text-4xl font-unbounded font-bold text-white mb-2" data-testid="mining-title">Mining Center</h1>
-        <p className="text-gray-400">Start mining and watch your XRP grow</p>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-unbounded font-bold text-white mb-2" data-testid="mining-title">Mining Center</h1>
+        <p className="text-gray-400 text-sm sm:text-base">Start mining and watch your XRP grow</p>
       </div>
 
-      <div className="glass-card p-8">
+      <div className="glass-card p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col items-center">
-          <div className="relative mb-8">
+          <div className="relative mb-6 sm:mb-8">
             <img
               src="https://images.unsplash.com/photo-1755282464684-6568f7f76b5d"
               alt="Mining Reactor"
-              className={`w-64 h-64 object-cover mining-reactor ${mining ? 'active' : ''}`}
+              className={`w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 object-cover mining-reactor ${mining ? 'active' : ''}`}
               data-testid="mining-reactor"
             />
             {mining && (
