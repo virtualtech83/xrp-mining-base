@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Wallet, Pickaxe, History, Users, Trophy, LogOut, ArrowDownToLine, Menu, X } from 'lucide-react';
+import { Wallet, Pickaxe, History, Users, Trophy, LogOut, ArrowDownToLine, Menu, X, Coins } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function DashboardLayout({ children }) {
@@ -33,10 +33,15 @@ export default function DashboardLayout({ children }) {
         {/* Desktop Sidebar */}
         <aside className="hidden lg:block w-64 min-h-screen glass-card border-r border-white/10">
           <div className="p-6">
-            <h1 className="text-2xl font-unbounded font-bold text-white mb-2" data-testid="app-title">
-              XRP MineSim
-            </h1>
-            <p className="text-xs text-gray-400 font-mono" data-testid="user-email">{user?.email}</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-primary rounded-sm flex items-center justify-center neon-glow">
+                <Coins className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-xl font-unbounded font-bold text-white" data-testid="app-title">
+                XRP Mining Base
+              </h1>
+            </div>
+            <p className="text-xs text-gray-400 font-mono ml-13" data-testid="user-email">{user?.email}</p>
           </div>
 
           <nav className="px-3 space-y-1">
