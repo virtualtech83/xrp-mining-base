@@ -94,7 +94,7 @@ export default function LandingPage() {
 
       <footer className="py-8 bg-black/90 border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-400 text-sm">
-          <p>© 2025 XRP MineSim. All rights reserved. This is a simulation platform for entertainment purposes.</p>
+          <p>© 2025 XRP Mining Base. All rights reserved. This is a simulation platform for entertainment purposes.</p>
         </div>
       </footer>
     </div>
