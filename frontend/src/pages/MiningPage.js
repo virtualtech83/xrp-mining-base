@@ -162,41 +162,41 @@ export default function MiningPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass-card p-6" data-testid="hashrate-card">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="glass-card p-4 sm:p-6" data-testid="hashrate-card">
           <div className="flex items-center gap-3 mb-3">
-            <Zap className="w-5 h-5 text-primary" />
-            <h3 className="font-unbounded font-bold text-white">Hash Rate</h3>
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <h3 className="font-unbounded font-bold text-white text-sm sm:text-base">Hash Rate</h3>
           </div>
-          <p className="text-3xl font-mono font-bold text-primary" data-testid="hashrate-value">
+          <p className="text-2xl sm:text-3xl font-mono font-bold text-primary" data-testid="hashrate-value">
             {hashRate.toFixed(2)} H/s
           </p>
         </div>
 
-        <div className="glass-card p-6" data-testid="session-time-card">
+        <div className="glass-card p-4 sm:p-6" data-testid="session-time-card">
           <div className="flex items-center gap-3 mb-3">
-            <Clock className="w-5 h-5 text-accent" />
-            <h3 className="font-unbounded font-bold text-white">Session Time</h3>
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+            <h3 className="font-unbounded font-bold text-white text-sm sm:text-base">Session Time</h3>
           </div>
-          <p className="text-3xl font-mono font-bold text-white" data-testid="session-time-value">
+          <p className="text-2xl sm:text-3xl font-mono font-bold text-white" data-testid="session-time-value">
             {formatTime(elapsedSeconds)}
           </p>
         </div>
 
-        <div className="glass-card p-6" data-testid="accumulated-xrp-card">
+        <div className="glass-card p-4 sm:p-6 sm:col-span-2 lg:col-span-1" data-testid="accumulated-xrp-card">
           <div className="flex items-center gap-3 mb-3">
-            <TrendingUp className="w-5 h-5 text-accent" />
-            <h3 className="font-unbounded font-bold text-white">Accumulated</h3>
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+            <h3 className="font-unbounded font-bold text-white text-sm sm:text-base">Accumulated</h3>
           </div>
-          <p className="text-3xl font-mono font-bold text-accent" data-testid="accumulated-xrp-value">
+          <p className="text-2xl sm:text-3xl font-mono font-bold text-accent" data-testid="accumulated-xrp-value">
             {accumulatedXRP.toFixed(4)} XRP
           </p>
         </div>
       </div>
 
       {mining && (
-        <div className="glass-card p-6 bg-primary/10 border-primary/30">
-          <p className="text-white text-center" data-testid="mining-tip">
+        <div className="glass-card p-4 sm:p-6 bg-primary/10 border-primary/30">
+          <p className="text-white text-center text-sm sm:text-base" data-testid="mining-tip">
             <span className="font-bold">Tip:</span> The longer you mine, the higher your rewards! Mining rate increases over time.
           </p>
         </div>
