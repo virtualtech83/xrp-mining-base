@@ -159,9 +159,14 @@ export default function DashboardLayout({ children }) {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-xl font-unbounded font-bold text-white" data-testid="page-title-mobile">
-              XRP MineSim
-            </h1>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-sm flex items-center justify-center neon-glow">
+                <Coins className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-base font-unbounded font-bold text-white" data-testid="page-title-mobile">
+                XRP Mining Base
+              </h1>
+            </div>
             <div className="w-6"></div>
           </header>
 
