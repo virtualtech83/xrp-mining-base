@@ -1,14 +1,37 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Shield, TrendingUp, Users } from 'lucide-react';
+import { Zap, Shield, TrendingUp, Users, Coins } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#050505]">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            <div className="flex items-center gap-3" data-testid="site-header">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-sm flex items-center justify-center neon-glow">
+                <Coins className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-unbounded font-bold text-white" data-testid="site-name">
+                XRP Mining Base
+              </h1>
+            </div>
+            <button
+              onClick={() => navigate('/auth')}
+              data-testid="header-login-button"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-primary text-white font-bold uppercase tracking-wider hover:bg-blue-600 transition-all duration-300 border border-blue-400/30 text-xs sm:text-sm"
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
+      </header>
+
       <div
-        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 sm:pt-20"
         style={{
           backgroundImage: 'url(https://images.pexels.com/photos/17323801/pexels-photo-17323801.jpeg)',
           backgroundSize: 'cover',
