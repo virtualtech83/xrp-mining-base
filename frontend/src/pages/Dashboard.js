@@ -98,19 +98,19 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <div className="md:col-span-2 glass-card p-4 sm:p-6 lg:p-8" data-testid="balance-card">
           <div className="flex items-center gap-3 mb-4">
-            <Wallet className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-unbounded font-bold text-white">Your Balance</h2>
+            <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            <h2 className="text-lg sm:text-xl font-unbounded font-bold text-white">Your Balance</h2>
           </div>
-          <div className="balance-display" data-testid="balance-amount">
+          <div className="balance-display text-3xl sm:text-4xl" data-testid="balance-amount">
             {user?.xrp_balance?.toFixed(4) || '0.0000'} XRP
           </div>
-          <p className="text-gray-400 mt-2 text-sm font-mono">Total Mined: {user?.total_mined?.toFixed(4) || '0.0000'} XRP</p>
+          <p className="text-gray-400 mt-2 text-xs sm:text-sm font-mono">Total Mined: {user?.total_mined?.toFixed(4) || '0.0000'} XRP</p>
         </div>
 
-        <div className="glass-card p-6" data-testid="daily-reward-card">
+        <div className="glass-card p-4 sm:p-6" data-testid="daily-reward-card">
           <div className="flex items-center gap-3 mb-4">
-            <Gift className="w-6 h-6 text-accent" />
-            <h2 className="text-lg font-unbounded font-bold text-white">Daily Reward</h2>
+            <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
+            <h2 className="text-base sm:text-lg font-unbounded font-bold text-white">Daily Reward</h2>
           </div>
           {dailyRewardStatus?.can_claim ? (
             <button
