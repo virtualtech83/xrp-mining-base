@@ -89,14 +89,14 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6" data-testid="dashboard">
+    <div className="space-y-4 sm:space-y-6" data-testid="dashboard">
       <div>
-        <h1 className="text-4xl font-unbounded font-bold text-white mb-2" data-testid="dashboard-title">Dashboard</h1>
-        <p className="text-gray-400">Welcome back, miner!</p>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-unbounded font-bold text-white mb-2" data-testid="dashboard-title">Dashboard</h1>
+        <p className="text-gray-400 text-sm sm:text-base">Welcome back, miner!</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 glass-card p-8" data-testid="balance-card">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="md:col-span-2 glass-card p-4 sm:p-6 lg:p-8" data-testid="balance-card">
           <div className="flex items-center gap-3 mb-4">
             <Wallet className="w-6 h-6 text-primary" />
             <h2 className="text-xl font-unbounded font-bold text-white">Your Balance</h2>
