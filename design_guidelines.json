@@ -1,0 +1,126 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "XRP MineSim",
+      "archetype": "Electric & Neon",
+      "vibe": "Futuristic, High-Stakes, Gamified, Dark Mode Only",
+      "emotional_tone": "Adrenaline, Precision, Wealth"
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Unbounded, sans-serif",
+        "body": "Inter, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "weights": {
+        "headings": "700",
+        "body": "400",
+        "bold": "600"
+      },
+      "instructions": "Import 'Unbounded' from Google Fonts. Use it for all H1-H3 headings. Use 'JetBrains Mono' for all numbers, hashes, and balances."
+    },
+    "colors": {
+      "palette": {
+        "background": "#050505",
+        "surface": "#0A0A0A",
+        "surface_highlight": "#171717",
+        "primary": "#3B82F6",
+        "primary_glow": "rgba(59, 130, 246, 0.5)",
+        "accent": "#EAB308",
+        "accent_glow": "rgba(234, 179, 8, 0.5)",
+        "text_primary": "#FFFFFF",
+        "text_secondary": "#A1A1AA",
+        "border": "rgba(255, 255, 255, 0.1)",
+        "success": "#22C55E",
+        "error": "#EF4444"
+      },
+      "gradients": {
+        "primary_action": "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
+        "gold_reward": "linear-gradient(135deg, #FACC15 0%, #CA8A04 100%)",
+        "dark_glass": "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)"
+      },
+      "forbidden": [
+        "#1B93A4",
+        "#7351B7",
+        "teal"
+      ]
+    },
+    "visual_enhancers": {
+      "glassmorphism": "backdrop-blur-xl bg-black/40 border border-white/10 shadow-2xl",
+      "neon_glow": "box-shadow: 0 0 20px rgba(59, 130, 246, 0.3)",
+      "grid_background": "bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]",
+      "borders": "1px solid rgba(255, 255, 255, 0.08)"
+    },
+    "layout": {
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      "spacing": {
+        "section": "py-24",
+        "element": "gap-6"
+      },
+      "grid_system": "Bento Grid (Mode A for Dashboard)",
+      "border_radius": "rounded-none"
+    },
+    "motion": {
+      "hover": "transition-all duration-300 ease-out hover:translate-y-[-2px] hover:shadow-lg",
+      "click": "active:scale-95",
+      "mining_pulse": "animate-pulse duration-1000"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-white font-bold uppercase tracking-wider hover:bg-blue-600 rounded-none border border-blue-400/30 shadow-[0_0_15px_rgba(59,130,246,0.4)]",
+      "secondary": "bg-transparent border border-white/20 text-white hover:bg-white/5 rounded-none",
+      "ghost": "text-gray-400 hover:text-white hover:bg-white/5"
+    },
+    "cards": {
+      "default": "bg-black/60 backdrop-blur-md border border-white/10 p-6 rounded-none relative overflow-hidden group",
+      "interactive": "hover:border-primary/50 transition-colors duration-300"
+    },
+    "inputs": {
+      "default": "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-primary focus:ring-1 focus:ring-primary rounded-none h-12"
+    }
+  },
+  "assets": {
+    "images": [
+      {
+        "category": "hero_background",
+        "url": "https://images.pexels.com/photos/17323801/pexels-photo-17323801.jpeg",
+        "description": "Futuristic server room, dark blue tones. Use as background for Landing Page Hero with overlay."
+      },
+      {
+        "category": "mining_visualization",
+        "url": "https://images.unsplash.com/photo-1755282464684-6568f7f76b5d",
+        "description": "Abstract geometric blue shapes. Use in the center of the Mining Page. Rotate this image when mining is active."
+      },
+      {
+        "category": "reward_icon",
+        "url": "https://images.unsplash.com/photo-1768337099525-1f2b4c872381",
+        "description": "Gold coin close up. Use for 'Daily Reward' or 'Balance' cards."
+      }
+    ],
+    "icons": "Use 'lucide-react' for all UI icons (Wallet, Pickaxe, History, Users, Trophy)."
+  },
+  "pages": {
+    "landing": {
+      "structure": "Hero (Headline + CTA) -> Features Grid (Bento) -> Live Stats -> Footer",
+      "hero_text": "MINE XRP. SIMULATE WEALTH. DOMINATE.",
+      "cta_primary": "START MINING NOW"
+    },
+    "dashboard": {
+      "structure": "Sidebar (Nav) + Main Content Area",
+      "grid_layout": "Grid cols-1 md:cols-3 gap-6. Balance (col-span-2), Daily Reward (col-span-1), Mining Status (col-span-3), Recent History (col-span-3)"
+    },
+    "mining": {
+      "visual": "Central 'Reactor' (Image) that spins/pulses when active.",
+      "stats": "Display 'Hash Rate', 'Session Time', 'Accumulated XRP' in real-time (odometer effect)."
+    }
+  },
+  "universal_guidelines": [
+    "DO NOT use gradients for text.",
+    "DO NOT use rounded corners > 4px. Prefer sharp edges (rounded-none or rounded-sm) for a 'Cyber' feel.",
+    "ALWAYS use 'JetBrains Mono' for displaying crypto addresses, transaction hashes, and balance numbers.",
+    "Ensure all interactive elements have a hover state that increases brightness or adds a glow.",
+    "Use 'sonner' for all notifications (Mining started, Withdrawal requested).",
+    "Dark Mode is MANDATORY. Do not implement a light mode toggle."
+  ]
+}
