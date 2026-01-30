@@ -144,18 +144,18 @@ export default function MiningPage() {
             <button
               onClick={handleStopMining}
               data-testid="stop-mining-button"
-              className="px-8 py-4 bg-destructive text-white font-bold uppercase tracking-wider hover:bg-red-600 transition-all duration-300 border border-red-400/30 flex items-center gap-3"
+              className="px-6 sm:px-8 py-3 sm:py-4 bg-destructive text-white font-bold uppercase tracking-wider hover:bg-red-600 transition-all duration-300 border border-red-400/30 flex items-center gap-3 text-sm sm:text-base"
             >
-              <Square className="w-5 h-5" />
+              <Square className="w-4 h-4 sm:w-5 sm:h-5" />
               Stop Mining
             </button>
           ) : (
             <button
               onClick={handleStartMining}
               data-testid="start-mining-button"
-              className="px-8 py-4 bg-primary text-white font-bold uppercase tracking-wider hover:bg-blue-600 transition-all duration-300 border border-blue-400/30 neon-glow flex items-center gap-3"
+              className="px-6 sm:px-8 py-3 sm:py-4 bg-primary text-white font-bold uppercase tracking-wider hover:bg-blue-600 transition-all duration-300 border border-blue-400/30 neon-glow flex items-center gap-3 text-sm sm:text-base"
             >
-              <Play className="w-5 h-5" />
+              <Play className="w-4 h-4 sm:w-5 sm:h-5" />
               Start Mining
             </button>
           )}
