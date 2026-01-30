@@ -95,9 +95,14 @@ export default function DashboardLayout({ children }) {
         >
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-unbounded font-bold text-white" data-testid="app-title-mobile">
-                XRP MineSim
-              </h1>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-primary rounded-sm flex items-center justify-center neon-glow">
+                  <Coins className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-lg font-unbounded font-bold text-white" data-testid="app-title-mobile">
+                  XRP Mining Base
+                </h1>
+              </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 data-testid="close-mobile-menu"
@@ -106,7 +111,7 @@ export default function DashboardLayout({ children }) {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <p className="text-xs text-gray-400 font-mono" data-testid="user-email-mobile">{user?.email}</p>
+            <p className="text-xs text-gray-400 font-mono ml-10" data-testid="user-email-mobile">{user?.email}</p>
           </div>
 
           <nav className="px-3 space-y-1">
