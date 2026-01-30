@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Coins } from 'lucide-react';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -46,9 +47,17 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-[#050505] grid-bg flex items-center justify-center px-4">
       <div className="glass-card p-8 w-full max-w-md">
-        <h1 className="text-3xl font-unbounded font-bold text-white mb-2 text-center" data-testid="auth-title">
-          {isLogin ? 'Welcome Back' : 'Join XRP MineSim'}
-        </h1>
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-primary rounded-sm flex items-center justify-center neon-glow">
+            <Coins className="w-7 h-7 text-white" />
+          </div>
+          <h1 className="text-2xl font-unbounded font-bold text-white" data-testid="auth-brand">
+            XRP Mining Base
+          </h1>
+        </div>
+        <h2 className="text-xl font-unbounded font-bold text-white mb-2 text-center" data-testid="auth-title">
+          {isLogin ? 'Welcome Back' : 'Join Us'}
+        </h2>
         <p className="text-gray-400 text-center mb-8 text-sm">
           {isLogin ? 'Login to continue mining' : 'Create your account and start mining'}
         </p>
