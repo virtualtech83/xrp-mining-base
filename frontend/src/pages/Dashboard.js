@@ -148,8 +148,8 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className="glass-card p-6" data-testid="recent-history-card">
-        <h2 className="text-xl font-unbounded font-bold text-white mb-4">Recent Mining Sessions</h2>
+      <div className="glass-card p-4 sm:p-6" data-testid="recent-history-card">
+        <h2 className="text-lg sm:text-xl font-unbounded font-bold text-white mb-4">Recent Mining Sessions</h2>
         {miningHistory.length > 0 ? (
           <div className="space-y-3">
             {miningHistory.map((session) => (
