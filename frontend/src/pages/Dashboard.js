@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -14,13 +14,7 @@ export default function Dashboard() {
   const [miningHistory, setMiningHistory] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
 
-  useEffect(() => {
-    fetchDailyRewardStatus();
-    fetchMiningHistory();
-    fetchActiveSession();
-  }, []);
-
-  const fetchDailyRewardStatus = async () => {
+  const fetchDailyRewardStatus = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/rewards/daily/status`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -29,9 +23,9 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to fetch daily reward status:', error);
     }
-  };
+  }, [token]);
 
-  const fetchMiningHistory = async () => {
+  const fetchMiningHistory = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/mining/history`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -40,9 +34,9 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to fetch mining history:', error);
     }
-  };
+  }, [token]);
 
-  const fetchActiveSession = async () => {
+  const fetchActiveSession = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/mining/active`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -51,7 +45,13 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to fetch active session:', error);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchDailyRewardStatus();
+    fetchMiningHistory();
+    fetchActiveSession();
+  }, [fetchDailyRewardStatus, fetchMiningHistory, fetchActiveSession]);
 
   const handleClaimDailyReward = async () => {
     setClaimingReward(true);
@@ -80,9 +80,9 @@ export default function Dashboard() {
     const now = new Date();
     const nextClaim = new Date(dailyRewardStatus.next_claim_time);
     const diff = nextClaim - now;
-    
+
     if (diff <= 0) return 'Available now!';
-    
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
@@ -91,27 +91,50 @@ export default function Dashboard() {
   return (
     <div className="space-y-4 sm:space-y-6" data-testid="dashboard">
       <div>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-unbounded font-bold text-white mb-2" data-testid="dashboard-title">Dashboard</h1>
-        <p className="text-gray-400 text-sm sm:text-base">Welcome back, miner!</p>
+        <h1
+          className="text-2xl sm:text-3xl lg:text-4xl font-unbounded font-bold text-white mb-2"
+          data-testid="dashboard-title"
+        >
+          Dashboard
+        </h1>
+        <p className="text-gray-400 text-sm sm:text-base">
+          Welcome back, miner!
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-        <div className="md:col-span-2 glass-card p-4 sm:p-6 lg:p-8" data-testid="balance-card">
+        <div
+          className="md:col-span-2 glass-card p-4 sm:p-6 lg:p-8"
+          data-testid="balance-card"
+        >
           <div className="flex items-center gap-3 mb-4">
             <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-            <h2 className="text-lg sm:text-xl font-unbounded font-bold text-white">Your Balance</h2>
+            <h2 className="text-lg sm:text-xl font-unbounded font-bold text-white">
+              Your Balance
+            </h2>
           </div>
-          <div className="balance-display text-3xl sm:text-4xl" data-testid="balance-amount">
+          <div
+            className="balance-display text-3xl sm:text-4xl"
+            data-testid="balance-amount"
+          >
             {user?.xrp_balance?.toFixed(4) || '0.0000'} XRP
           </div>
-          <p className="text-gray-400 mt-2 text-xs sm:text-sm font-mono">Total Mined: {user?.total_mined?.toFixed(4) || '0.0000'} XRP</p>
+          <p className="text-gray-400 mt-2 text-xs sm:text-sm font-mono">
+            Total Mined: {user?.total_mined?.toFixed(4) || '0.0000'} XRP
+          </p>
         </div>
 
-        <div className="glass-card p-4 sm:p-6" data-testid="daily-reward-card">
+        <div
+          className="glass-card p-4 sm:p-6"
+          data-testid="daily-reward-card"
+        >
           <div className="flex items-center gap-3 mb-4">
             <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
-            <h2 className="text-base sm:text-lg font-unbounded font-bold text-white">Daily Reward</h2>
+            <h2 className="text-base sm:text-lg font-unbounded font-bold text-white">
+              Daily Reward
+            </h2>
           </div>
+
           {dailyRewardStatus?.can_claim ? (
             <button
               onClick={handleClaimDailyReward}
@@ -125,7 +148,9 @@ export default function Dashboard() {
             <div className="text-center" data-testid="reward-cooldown">
               <Clock className="w-8 h-8 text-gray-500 mx-auto mb-2" />
               <p className="text-gray-400 text-sm">Next claim in</p>
-              <p className="text-white font-mono font-bold mt-1">{getTimeUntilNextClaim()}</p>
+              <p className="text-white font-mono font-bold mt-1">
+                {getTimeUntilNextClaim()}
+              </p>
             </div>
           )}
         </div>
@@ -134,22 +159,40 @@ export default function Dashboard() {
       <div className="glass-card p-4 sm:p-6" data-testid="mining-status-card">
         <div className="flex items-center gap-3 mb-4">
           <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-          <h2 className="text-lg sm:text-xl font-unbounded font-bold text-white">Mining Status</h2>
+          <h2 className="text-lg sm:text-xl font-unbounded font-bold text-white">
+            Mining Status
+          </h2>
         </div>
+
         {activeSession ? (
           <div className="bg-primary/10 border border-primary/30 p-4">
-            <p className="text-primary font-bold text-lg" data-testid="mining-active-status">Mining Session Active</p>
-            <p className="text-gray-400 text-sm mt-1">Go to Mining page to view details</p>
+            <p
+              className="text-primary font-bold text-lg"
+              data-testid="mining-active-status"
+            >
+              Mining Session Active
+            </p>
+            <p className="text-gray-400 text-sm mt-1">
+              Go to Mining page to view details
+            </p>
           </div>
         ) : (
           <div className="bg-white/5 border border-white/10 p-4">
-            <p className="text-gray-400" data-testid="mining-idle-status">No active mining session</p>
+            <p
+              className="text-gray-400"
+              data-testid="mining-idle-status"
+            >
+              No active mining session
+            </p>
           </div>
         )}
       </div>
 
       <div className="glass-card p-4 sm:p-6" data-testid="recent-history-card">
-        <h2 className="text-lg sm:text-xl font-unbounded font-bold text-white mb-4">Recent Mining Sessions</h2>
+        <h2 className="text-lg sm:text-xl font-unbounded font-bold text-white mb-4">
+          Recent Mining Sessions
+        </h2>
+
         {miningHistory.length > 0 ? (
           <div className="space-y-3">
             {miningHistory.map((session) => (
@@ -159,11 +202,18 @@ export default function Dashboard() {
                 data-testid="history-item"
               >
                 <div>
-                  <p className="text-white font-mono text-sm">{formatDate(session.start_time)}</p>
-                  <p className="text-gray-400 text-xs mt-1">{session.duration_minutes?.toFixed(1)} minutes</p>
+                  <p className="text-white font-mono text-sm">
+                    {formatDate(session.start_time)}
+                  </p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    {session.duration_minutes?.toFixed(1)} minutes
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-accent font-mono font-bold" data-testid="session-earnings">
+                  <p
+                    className="text-accent font-mono font-bold"
+                    data-testid="session-earnings"
+                  >
                     +{session.xrp_earned?.toFixed(4)} XRP
                   </p>
                 </div>
@@ -171,7 +221,12 @@ export default function Dashboard() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-400" data-testid="no-history">No mining sessions yet. Start mining to see your history!</p>
+          <p
+            className="text-gray-400"
+            data-testid="no-history"
+          >
+            No mining sessions yet. Start mining to see your history!
+          </p>
         )}
       </div>
     </div>
