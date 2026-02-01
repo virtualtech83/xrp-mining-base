@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -15,11 +15,9 @@ export default function WithdrawalPage() {
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
 
-  useEffect(() => {
-    fetchWithdrawalHistory();
-  }, []);
+  const fetchWithdrawalHistory = useCallback(async () => {
+    if (!token) return;
 
-  const fetchWithdrawalHistory = async () => {
     try {
       const response = await axios.get(`${API}/withdrawal/history`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -28,7 +26,11 @@ export default function WithdrawalPage() {
     } catch (error) {
       console.error('Failed to fetch withdrawal history:', error);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchWithdrawalHistory();
+  }, [fetchWithdrawalHistory]);
 
   const handleWithdrawal = async (e) => {
     e.preventDefault();
@@ -51,8 +53,10 @@ export default function WithdrawalPage() {
         { amount: withdrawalAmount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       toast.success('Withdrawal request submitted successfully!');
       setAmount('');
+
       await refreshProfile();
       await fetchWithdrawalHistory();
     } catch (error) {
@@ -69,23 +73,40 @@ export default function WithdrawalPage() {
   return (
     <div className="space-y-6" data-testid="withdrawal-page">
       <div>
-        <h1 className="text-4xl font-unbounded font-bold text-white mb-2" data-testid="withdrawal-title">Withdraw XRP</h1>
-        <p className="text-gray-400">Request a withdrawal from your balance</p>
+        <h1
+          className="text-4xl font-unbounded font-bold text-white mb-2"
+          data-testid="withdrawal-title"
+        >
+          Withdraw XRP
+        </h1>
+        <p className="text-gray-400">
+          Request a withdrawal from your balance
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-card p-6" data-testid="withdrawal-form-card">
-          <h2 className="text-xl font-unbounded font-bold text-white mb-4">New Withdrawal</h2>
-          
+          <h2 className="text-xl font-unbounded font-bold text-white mb-4">
+            New Withdrawal
+          </h2>
+
           <div className="bg-primary/10 border border-primary/30 p-4 mb-6">
-            <p className="text-white font-mono text-sm" data-testid="available-balance">
-              Available Balance: <span className="font-bold text-primary">{user?.xrp_balance?.toFixed(4) || '0.0000'} XRP</span>
+            <p
+              className="text-white font-mono text-sm"
+              data-testid="available-balance"
+            >
+              Available Balance:{' '}
+              <span className="font-bold text-primary">
+                {user?.xrp_balance?.toFixed(4) || '0.0000'} XRP
+              </span>
             </p>
           </div>
 
           <form onSubmit={handleWithdrawal} className="space-y-4">
             <div>
-              <Label htmlFor="amount" className="text-white mb-2 block">Withdrawal Amount (XRP)</Label>
+              <Label htmlFor="amount" className="text-white mb-2 block">
+                Withdrawal Amount (XRP)
+              </Label>
               <Input
                 id="amount"
                 type="number"
@@ -112,7 +133,9 @@ export default function WithdrawalPage() {
 
           <div className="mt-6 bg-white/5 border border-white/10 p-4">
             <p className="text-gray-400 text-xs">
-              <span className="font-bold text-white">Note:</span> This is a simulation. Withdrawal requests are recorded but no actual XRP is transferred.
+              <span className="font-bold text-white">Note:</span> This is a
+              simulation. Withdrawal requests are recorded but no actual XRP is
+              transferred.
             </p>
           </div>
         </div>
@@ -120,9 +143,11 @@ export default function WithdrawalPage() {
         <div className="glass-card p-6" data-testid="withdrawal-history-card">
           <div className="flex items-center gap-3 mb-4">
             <History className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-unbounded font-bold text-white">Withdrawal History</h2>
+            <h2 className="text-xl font-unbounded font-bold text-white">
+              Withdrawal History
+            </h2>
           </div>
-          
+
           {history.length > 0 ? (
             <div className="space-y-3">
               {history.map((withdrawal) => (
@@ -132,7 +157,10 @@ export default function WithdrawalPage() {
                   data-testid="withdrawal-history-item"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <p className="text-white font-mono font-bold" data-testid="withdrawal-amount">
+                    <p
+                      className="text-white font-mono font-bold"
+                      data-testid="withdrawal-amount"
+                    >
                       {withdrawal.amount?.toFixed(4)} XRP
                     </p>
                     <span
@@ -148,12 +176,22 @@ export default function WithdrawalPage() {
                       {withdrawal.status.toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-gray-400 text-xs" data-testid="withdrawal-date">{formatDate(withdrawal.created_at)}</p>
+                  <p
+                    className="text-gray-400 text-xs"
+                    data-testid="withdrawal-date"
+                  >
+                    {formatDate(withdrawal.created_at)}
+                  </p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-400" data-testid="no-withdrawals">No withdrawal requests yet.</p>
+            <p
+              className="text-gray-400"
+              data-testid="no-withdrawals"
+            >
+              No withdrawal requests yet.
+            </p>
           )}
         </div>
       </div>
