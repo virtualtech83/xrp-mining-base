@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -12,11 +12,12 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
+
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) {
       setReferralCode(ref);
@@ -26,8 +27,9 @@ export default function AuthPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    if (loading) return;
 
+    setLoading(true);
     try {
       if (isLogin) {
         await login(email, password);
@@ -38,7 +40,7 @@ export default function AuthPage() {
       }
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Authentication failed');
+      toast.error(error?.response?.data?.detail || 'Authentication failed');
     } finally {
       setLoading(false);
     }
@@ -51,20 +53,32 @@ export default function AuthPage() {
           <div className="w-12 h-12 bg-primary rounded-sm flex items-center justify-center neon-glow">
             <Coins className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-unbounded font-bold text-white" data-testid="auth-brand">
+          <h1
+            className="text-2xl font-unbounded font-bold text-white"
+            data-testid="auth-brand"
+          >
             XRP Mining Base
           </h1>
         </div>
-        <h2 className="text-xl font-unbounded font-bold text-white mb-2 text-center" data-testid="auth-title">
+
+        <h2
+          className="text-xl font-unbounded font-bold text-white mb-2 text-center"
+          data-testid="auth-title"
+        >
           {isLogin ? 'Welcome Back' : 'Join Us'}
         </h2>
+
         <p className="text-gray-400 text-center mb-8 text-sm">
-          {isLogin ? 'Login to continue mining' : 'Create your account and start mining'}
+          {isLogin
+            ? 'Login to continue mining'
+            : 'Create your account and start mining'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="email" className="text-white mb-2 block">Email</Label>
+            <Label htmlFor="email" className="text-white mb-2 block">
+              Email
+            </Label>
             <Input
               id="email"
               type="email"
@@ -78,7 +92,9 @@ export default function AuthPage() {
           </div>
 
           <div>
-            <Label htmlFor="password" className="text-white mb-2 block">Password</Label>
+            <Label htmlFor="password" className="text-white mb-2 block">
+              Password
+            </Label>
             <Input
               id="password"
               type="password"
@@ -93,7 +109,9 @@ export default function AuthPage() {
 
           {!isLogin && (
             <div>
-              <Label htmlFor="referralCode" className="text-white mb-2 block">Referral Code (Optional)</Label>
+              <Label htmlFor="referralCode" className="text-white mb-2 block">
+                Referral Code (Optional)
+              </Label>
               <Input
                 id="referralCode"
                 type="text"
@@ -118,11 +136,13 @@ export default function AuthPage() {
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => setIsLogin((prev) => !prev)}
             data-testid="toggle-auth-mode"
             className="text-gray-400 hover:text-white text-sm transition-colors"
           >
-            {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Login'}
+            {isLogin
+              ? "Don't have an account? Sign up"
+              : 'Already have an account? Login'}
           </button>
         </div>
       </div>
