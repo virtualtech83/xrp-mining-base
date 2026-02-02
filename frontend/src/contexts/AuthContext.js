@@ -1,67 +1,144 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from 'react';
 import axios from 'axios';
 
-const AuthContext = createContext();
+/* =========================
+   CONFIG
+========================= */
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+// Hard fail early if env is missing (prevents silent bugs)
+if (!BACKEND_URL) {
+  console.error(
+    'REACT_APP_BACKEND_URL is not defined. Check Vercel env variables.'
+  );
+}
+
 const API = `${BACKEND_URL}/api`;
+
+// Create axios instance (clean + consistent)
+const apiClient = axios.create({
+  baseURL: API,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+/* =========================
+   CONTEXT
+========================= */
+
+const AuthContext = createContext(null);
 
 export function useAuth() {
   return useContext(AuthContext);
 }
 
+/* =========================
+   PROVIDER
+========================= */
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(
+    () => localStorage.getItem('token')
+  );
+
+  /* =========================
+     INIT: LOAD PROFILE
+  ========================= */
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      fetchUserProfile(storedToken);
+    if (token) {
+      fetchUserProfile(token);
     } else {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /* =========================
+     HELPERS
+  ========================= */
 
   const fetchUserProfile = async (authToken) => {
     try {
-      const response = await axios.get(`${API}/user/profile`, {
-        headers: { Authorization: `Bearer ${authToken}` },
+      const response = await apiClient.get('/user/profile', {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
       });
+
       setUser(response.data);
       setToken(authToken);
     } catch (error) {
-      console.error('Failed to fetch user profile:', error);
+      console.error(
+        'Failed to fetch user profile:',
+        error?.response || error
+      );
       localStorage.removeItem('token');
+      setUser(null);
       setToken(null);
     } finally {
       setLoading(false);
     }
   };
 
+  /* =========================
+     AUTH ACTIONS
+  ========================= */
+
   const register = async (email, password, referralCode) => {
-    const response = await axios.post(`${API}/auth/register`, {
-      email,
-      password,
-      referral_code: referralCode || null,
-    });
-    const { token: newToken, user: userData } = response.data;
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
-    await fetchUserProfile(newToken);
-    return userData;
+    try {
+      const response = await apiClient.post('/auth/register', {
+        email,
+        password,
+        referral_code: referralCode || null,
+      });
+
+      const { token: newToken } = response.data;
+
+      localStorage.setItem('token', newToken);
+      setToken(newToken);
+      await fetchUserProfile(newToken);
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        'Registration failed:',
+        error?.response || error
+      );
+      throw error;
+    }
   };
 
   const login = async (email, password) => {
-    const response = await axios.post(`${API}/auth/login`, {
-      email,
-      password,
-    });
-    const { token: newToken, user: userData } = response.data;
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
-    await fetchUserProfile(newToken);
-    return userData;
+    try {
+      const response = await apiClient.post('/auth/login', {
+        email,
+        password,
+      });
+
+      const { token: newToken } = response.data;
+
+      localStorage.setItem('token', newToken);
+      setToken(newToken);
+      await fetchUserProfile(newToken);
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        'Login failed:',
+        error?.response || error
+      );
+      throw error;
+    }
   };
 
   const logout = () => {
@@ -76,6 +153,10 @@ export function AuthProvider({ children }) {
     }
   };
 
+  /* =========================
+     CONTEXT VALUE
+  ========================= */
+
   const value = {
     user,
     token,
@@ -86,5 +167,9 @@ export function AuthProvider({ children }) {
     refreshProfile,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
