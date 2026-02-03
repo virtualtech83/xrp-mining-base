@@ -4,8 +4,8 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
-from pydantic import BaseModel, EmailStr
-from typing import Optional
+from pydantic import BaseModel, EmailStr, ConfigDict
+from typing import Optional, List
 import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
@@ -13,18 +13,25 @@ import secrets
 import string
 import bcrypt
 
-# ------------------ ENV ------------------
+# ------------------ ENV SAFETY ------------------
 MONGO_URL = os.environ.get("MONGO_URL")
 DB_NAME = os.environ.get("DB_NAME")
-JWT_SECRET = os.environ.get("JWT_SECRET")
 
-if not MONGO_URL or not DB_NAME:
-    raise RuntimeError("Missing Mongo env vars")
+_raw_jwt_secret = os.environ.get("JWT_SECRET")
+if not _raw_jwt_secret or not isinstance(_raw_jwt_secret, str):
+    JWT_SECRET = "xrp-mining-dev-secret-fallback"
+else:
+    JWT_SECRET = _raw_jwt_secret.strip()
+
+if not MONGO_URL:
+    raise RuntimeError("MONGO_URL is missing")
+if not DB_NAME:
+    raise RuntimeError("DB_NAME is missing")
 
 MONGO_URL = MONGO_URL.strip()
 DB_NAME = DB_NAME.strip()
 
-# ------------------ DB ------------------
+# ------------------ DATABASE ------------------
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
@@ -44,11 +51,20 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserProfile(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    email: str
+    xrp_balance: float
+    referral_code: str
+    total_mined: float
+    created_at: str
+
 # ------------------ HELPERS ------------------
 def create_token(user_id: str) -> str:
     payload = {
         "user_id": user_id,
-        "exp": datetime.now(timezone.utc) + timedelta(days=30)
+        "exp": datetime.now(timezone.utc) + timedelta(days=30),
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -62,11 +78,15 @@ def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user = await db.users.find_one(
+            {"id": payload["user_id"]},
+            {"_id": 0},
+        )
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
         return user
@@ -82,6 +102,7 @@ async def register(data: UserRegister):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user_id = str(uuid.uuid4())
+
     user_doc = {
         "id": user_id,
         "email": data.email,
@@ -100,8 +121,8 @@ async def register(data: UserRegister):
         "user": {
             "id": user_id,
             "email": data.email,
-            "xrp_balance": 0.0
-        }
+            "xrp_balance": 0.0,
+        },
     }
 
 @api_router.post("/auth/login")
@@ -115,28 +136,22 @@ async def login(data: UserLogin):
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "xrp_balance": user["xrp_balance"]
-        }
+            "xrp_balance": user["xrp_balance"],
+        },
     }
 
-# ------------------ USER PROFILE (FIXED) ------------------
-@api_router.get("/user/profile")
-async def user_profile(current_user: dict = Depends(get_current_user)):
-    """
-    Matches original server logic:
-    - Uses Depends(get_current_user)
-    - Returns raw user dict
-    - No response_model enforcement
-    """
+# ------------------ USER PROFILE (THIS FIXES THE 404) ------------------
+@api_router.get("/user/profile", response_model=UserProfile)
+async def get_profile(current_user: dict = Depends(get_current_user)):
     return current_user
 
-# ------------------ MOUNT & CORS ------------------
+# ------------------ ROUTER & CORS ------------------
 app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
+    allow_origins=["https://xrp-mining-base.vercel.app"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
