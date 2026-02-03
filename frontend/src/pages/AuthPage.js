@@ -17,6 +17,9 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  /* =========================
+     HANDLE REFERRAL
+  ========================= */
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) {
@@ -25,11 +28,16 @@ export default function AuthPage() {
     }
   }, [searchParams]);
 
+  /* =========================
+     SUBMIT
+  ========================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (loading) return;
 
     setLoading(true);
+
     try {
       if (isLogin) {
         await login(email, password);
@@ -38,9 +46,20 @@ export default function AuthPage() {
         await register(email, password, referralCode);
         toast.success('Account created successfully!');
       }
-      navigate('/dashboard');
+
+      // Small delay avoids race with auth state
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 100);
     } catch (error) {
-      toast.error(error?.response?.data?.detail || 'Authentication failed');
+      console.error('Auth error:', error);
+
+      const message =
+        error?.response?.data?.detail ||
+        error?.response?.data?.message ||
+        'Authentication failed';
+
+      toast.error(message);
     } finally {
       setLoading(false);
     }
