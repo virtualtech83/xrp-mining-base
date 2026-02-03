@@ -12,7 +12,6 @@ import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Hard fail early if env is missing (prevents silent bugs)
 if (!BACKEND_URL) {
   console.error(
     'REACT_APP_BACKEND_URL is not defined. Check Vercel env variables.'
@@ -21,7 +20,6 @@ if (!BACKEND_URL) {
 
 const API = `${BACKEND_URL}/api`;
 
-// Create axios instance (clean + consistent)
 const apiClient = axios.create({
   baseURL: API,
   headers: {
@@ -51,7 +49,7 @@ export function AuthProvider({ children }) {
   );
 
   /* =========================
-     INIT: LOAD PROFILE
+     INIT
   ========================= */
 
   useEffect(() => {
@@ -95,50 +93,42 @@ export function AuthProvider({ children }) {
   ========================= */
 
   const register = async (email, password, referralCode) => {
-    try {
-      const response = await apiClient.post('/auth/register', {
-        email,
-        password,
-        referral_code: referralCode || null,
-      });
+    const response = await apiClient.post('/auth/register', {
+      email,
+      password,
+      referral_code: referralCode || null,
+    });
 
-      const { token: newToken } = response.data;
+    const { token: newToken } = response.data;
 
-      localStorage.setItem('token', newToken);
-      setToken(newToken);
-      await fetchUserProfile(newToken);
+    // Save token immediately
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
 
-      return response.data;
-    } catch (error) {
-      console.error(
-        'Registration failed:',
-        error?.response || error
-      );
-      throw error;
-    }
+    // Fetch profile, but don't fail registration if this errors
+    fetchUserProfile(newToken).catch((err) => {
+      console.warn('Profile fetch delayed:', err);
+    });
+
+    return response.data;
   };
 
   const login = async (email, password) => {
-    try {
-      const response = await apiClient.post('/auth/login', {
-        email,
-        password,
-      });
+    const response = await apiClient.post('/auth/login', {
+      email,
+      password,
+    });
 
-      const { token: newToken } = response.data;
+    const { token: newToken } = response.data;
 
-      localStorage.setItem('token', newToken);
-      setToken(newToken);
-      await fetchUserProfile(newToken);
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
 
-      return response.data;
-    } catch (error) {
-      console.error(
-        'Login failed:',
-        error?.response || error
-      );
-      throw error;
-    }
+    fetchUserProfile(newToken).catch((err) => {
+      console.warn('Profile fetch delayed:', err);
+    });
+
+    return response.data;
   };
 
   const logout = () => {
