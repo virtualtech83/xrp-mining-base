@@ -23,6 +23,7 @@ if not MONGO_URL:
 if not DB_NAME:
     raise RuntimeError("DB_NAME is missing")
 
+# Strip whitespace/newlines defensively
 MONGO_URL = MONGO_URL.strip()
 DB_NAME = DB_NAME.strip()
 
@@ -82,10 +83,10 @@ def generate_referral_code() -> str:
 
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
 def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
@@ -107,7 +108,6 @@ async def register(data: UserRegister):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user_id = str(uuid.uuid4())
-
     user_doc = {
         "id": user_id,
         "email": data.email,
@@ -145,52 +145,17 @@ async def login(data: UserLogin):
         }
     }
 
-# ------------------ USER ------------------
+# ------------------ USER PROFILE ------------------
 @api_router.get("/user/profile", response_model=UserProfile)
 async def get_profile(current_user: dict = Depends(get_current_user)):
     return UserProfile(**current_user)
-
-# ------------------ MINING (placeholders) ------------------
-@api_router.post("/mining/start", response_model=MiningSession)
-async def start_mining(current_user: dict = Depends(get_current_user)):
-    # Placeholder: implement mining logic here
-    session_id = str(uuid.uuid4())
-    session_doc = {
-        "id": session_id,
-        "user_id": current_user["id"],
-        "start_time": datetime.now(timezone.utc).isoformat(),
-        "end_time": None,
-        "duration_minutes": None,
-        "xrp_earned": 0.0,
-        "status": "active"
-    }
-    await db.mining_sessions.insert_one(session_doc)
-    return MiningSession(**session_doc)
-
-@api_router.post("/mining/stop", response_model=MiningSession)
-async def stop_mining(data: MiningStop, current_user: dict = Depends(get_current_user)):
-    # Placeholder: implement mining stop logic
-    session = await db.mining_sessions.find_one({"id": data.session_id, "user_id": current_user["id"], "status": "active"})
-    if not session:
-        raise HTTPException(status_code=404, detail="Active session not found")
-    xrp_earned = data.duration_minutes * 0.1
-    await db.mining_sessions.update_one(
-        {"id": data.session_id},
-        {"$set": {"end_time": datetime.now(timezone.utc).isoformat(),
-                  "duration_minutes": data.duration_minutes,
-                  "xrp_earned": xrp_earned,
-                  "status": "completed"}}
-    )
-    await db.users.update_one({"id": current_user["id"]}, {"$inc": {"xrp_balance": xrp_earned, "total_mined": xrp_earned}})
-    updated_session = await db.mining_sessions.find_one({"id": data.session_id}, {"_id": 0})
-    return MiningSession(**updated_session)
 
 # ------------------ ROUTER & CORS ------------------
 app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://xrp-mining-base.vercel.app"],
+    allow_origins=["https://xrp-mining-base.vercel.app"],  # adjust as needed
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
