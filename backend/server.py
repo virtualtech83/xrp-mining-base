@@ -11,6 +11,7 @@ from datetime import datetime, timezone, timedelta
 import jwt
 import secrets
 import string
+import bcrypt
 
 # ------------------ ENV SAFETY ------------------
 MONGO_URL = os.environ.get("MONGO_URL")
@@ -19,11 +20,10 @@ JWT_SECRET = os.environ.get("JWT_SECRET", "xrp-mining-secret-key-change-in-produ
 
 if not MONGO_URL:
     raise RuntimeError("MONGO_URL is missing")
-
 if not DB_NAME:
     raise RuntimeError("DB_NAME is missing")
 
-# 🚨 Strip whitespace/newlines defensively
+# Strip whitespace/newlines defensively
 MONGO_URL = MONGO_URL.strip()
 DB_NAME = DB_NAME.strip()
 
@@ -35,7 +35,6 @@ db = client[DB_NAME]
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
-
 JWT_ALGORITHM = "HS256"
 
 # ------------------ MODELS ------------------
@@ -82,15 +81,13 @@ def create_token(user_id: str) -> str:
 def generate_referral_code() -> str:
     return "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
 
-# ⚠️ TEMP SIMPLE HASH (bcrypt was NOT the issue, Mongo was)
 def hash_password(password: str) -> str:
-    return jwt.encode({"p": password}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    # Generate salt & hash
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 def verify_password(password: str, hashed: str) -> bool:
-    try:
-        return jwt.decode(hashed, JWT_SECRET, algorithms=[JWT_ALGORITHM])["p"] == password
-    except Exception:
-        return False
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
