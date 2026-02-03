@@ -4,8 +4,8 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
-from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import List, Optional
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
@@ -13,21 +13,18 @@ import secrets
 import string
 import bcrypt
 
-# ------------------ ENV SAFETY ------------------
+# ------------------ ENV ------------------
 MONGO_URL = os.environ.get("MONGO_URL")
 DB_NAME = os.environ.get("DB_NAME")
-JWT_SECRET = os.environ.get("JWT_SECRET", "xrp-mining-secret-key-change-in-production")
+JWT_SECRET = os.environ.get("JWT_SECRET")
 
-if not MONGO_URL:
-    raise RuntimeError("MONGO_URL is missing")
-if not DB_NAME:
-    raise RuntimeError("DB_NAME is missing")
+if not MONGO_URL or not DB_NAME:
+    raise RuntimeError("Missing Mongo env vars")
 
-# Strip whitespace/newlines defensively
 MONGO_URL = MONGO_URL.strip()
 DB_NAME = DB_NAME.strip()
 
-# ------------------ DATABASE ------------------
+# ------------------ DB ------------------
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
@@ -47,29 +44,6 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-class UserProfile(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    email: str
-    xrp_balance: float
-    referral_code: str
-    total_mined: float
-    created_at: str
-
-class MiningSession(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    user_id: str
-    start_time: str
-    end_time: Optional[str]
-    duration_minutes: Optional[float]
-    xrp_earned: float
-    status: str
-
-class MiningStop(BaseModel):
-    session_id: str
-    duration_minutes: float
-
 # ------------------ HELPERS ------------------
 def create_token(user_id: str) -> str:
     payload = {
@@ -82,16 +56,16 @@ def generate_referral_code() -> str:
     return "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
 
 def hash_password(password: str) -> str:
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
@@ -145,18 +119,24 @@ async def login(data: UserLogin):
         }
     }
 
-# ------------------ USER PROFILE ------------------
-@api_router.get("/user/profile", response_model=UserProfile)
-async def get_profile(current_user: dict = Depends(get_current_user)):
-    return UserProfile(**current_user)
+# ------------------ USER PROFILE (FIXED) ------------------
+@api_router.get("/user/profile")
+async def user_profile(current_user: dict = Depends(get_current_user)):
+    """
+    Matches original server logic:
+    - Uses Depends(get_current_user)
+    - Returns raw user dict
+    - No response_model enforcement
+    """
+    return current_user
 
-# ------------------ ROUTER & CORS ------------------
+# ------------------ MOUNT & CORS ------------------
 app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://xrp-mining-base.vercel.app"],  # adjust as needed
-    allow_credentials=False,
+    allow_credentials=True,
+    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
     allow_methods=["*"],
     allow_headers=["*"],
 )
