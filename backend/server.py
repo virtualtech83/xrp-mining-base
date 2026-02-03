@@ -23,7 +23,6 @@ if not MONGO_URL:
 if not DB_NAME:
     raise RuntimeError("DB_NAME is missing")
 
-# Strip whitespace/newlines defensively
 MONGO_URL = MONGO_URL.strip()
 DB_NAME = DB_NAME.strip()
 
@@ -70,6 +69,10 @@ class MiningStop(BaseModel):
     session_id: str
     duration_minutes: float
 
+class WithdrawalRequest(BaseModel):
+    amount: float
+    wallet_address: str
+
 # ------------------ HELPERS ------------------
 def create_token(user_id: str) -> str:
     payload = {
@@ -82,7 +85,6 @@ def generate_referral_code() -> str:
     return "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
 
 def hash_password(password: str) -> str:
-    # Generate salt & hash
     salt = bcrypt.gensalt()
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
@@ -109,6 +111,7 @@ async def register(data: UserRegister):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user_id = str(uuid.uuid4())
+    referral_code = generate_referral_code()
 
     user_doc = {
         "id": user_id,
@@ -116,19 +119,27 @@ async def register(data: UserRegister):
         "password_hash": hash_password(data.password),
         "xrp_balance": 0.0,
         "total_mined": 0.0,
-        "referral_code": generate_referral_code(),
+        "referral_code": referral_code,
         "referred_by": data.referral_code,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
 
     await db.users.insert_one(user_doc)
 
+    # Reward referrer if referral_code is valid
+    if data.referral_code:
+        referrer = await db.users.find_one({"referral_code": data.referral_code})
+        if referrer:
+            reward_amount = 10.0  # Example referral bonus
+            await db.users.update_one({"id": referrer["id"]}, {"$inc": {"xrp_balance": reward_amount}})
+
     return {
         "token": create_token(user_id),
         "user": {
             "id": user_id,
             "email": data.email,
-            "xrp_balance": 0.0
+            "xrp_balance": 0.0,
+            "referral_code": referral_code
         }
     }
 
@@ -143,9 +154,78 @@ async def login(data: UserLogin):
         "user": {
             "id": user["id"],
             "email": user["email"],
-            "xrp_balance": user["xrp_balance"]
+            "xrp_balance": user["xrp_balance"],
+            "referral_code": user["referral_code"]
         }
     }
+
+# ------------------ USER ------------------
+@api_router.get("/user/profile", response_model=UserProfile)
+async def get_profile(current_user: dict = Depends(get_current_user)):
+    return UserProfile(**current_user)
+
+# ------------------ MINING ------------------
+@api_router.post("/mining/start", response_model=MiningSession)
+async def start_mining(current_user: dict = Depends(get_current_user)):
+    session_id = str(uuid.uuid4())
+    session_doc = {
+        "id": session_id,
+        "user_id": current_user["id"],
+        "start_time": datetime.now(timezone.utc).isoformat(),
+        "end_time": None,
+        "duration_minutes": None,
+        "xrp_earned": 0.0,
+        "status": "active"
+    }
+    await db.mining_sessions.insert_one(session_doc)
+    return MiningSession(**session_doc)
+
+@api_router.post("/mining/stop", response_model=MiningSession)
+async def stop_mining(data: MiningStop, current_user: dict = Depends(get_current_user)):
+    session = await db.mining_sessions.find_one({"id": data.session_id, "user_id": current_user["id"], "status": "active"})
+    if not session:
+        raise HTTPException(status_code=404, detail="Active session not found")
+    xrp_earned = data.duration_minutes * 0.1
+    await db.mining_sessions.update_one(
+        {"id": data.session_id},
+        {"$set": {
+            "end_time": datetime.now(timezone.utc).isoformat(),
+            "duration_minutes": data.duration_minutes,
+            "xrp_earned": xrp_earned,
+            "status": "completed"
+        }}
+    )
+    await db.users.update_one({"id": current_user["id"]}, {"$inc": {"xrp_balance": xrp_earned, "total_mined": xrp_earned}})
+    updated_session = await db.mining_sessions.find_one({"id": data.session_id}, {"_id": 0})
+    return MiningSession(**updated_session)
+
+# ------------------ REFERRAL ------------------
+@api_router.get("/referrals")
+async def get_referrals(current_user: dict = Depends(get_current_user)):
+    referrals = await db.users.find({"referred_by": current_user["referral_code"]}).to_list(100)
+    return [{"email": r["email"], "id": r["id"], "xrp_balance": r["xrp_balance"]} for r in referrals]
+
+# ------------------ WITHDRAWAL ------------------
+@api_router.post("/withdraw")
+async def request_withdrawal(data: WithdrawalRequest, current_user: dict = Depends(get_current_user)):
+    if data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Invalid withdrawal amount")
+    if data.amount > current_user["xrp_balance"]:
+        raise HTTPException(status_code=400, detail="Insufficient balance")
+
+    withdrawal_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "amount": data.amount,
+        "wallet_address": data.wallet_address,
+        "status": "pending",
+        "requested_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    await db.withdrawals.insert_one(withdrawal_doc)
+    await db.users.update_one({"id": current_user["id"]}, {"$inc": {"xrp_balance": -data.amount}})
+
+    return {"detail": "Withdrawal requested successfully", "withdrawal_id": withdrawal_doc["id"]}
 
 # ------------------ ROUTER & CORS ------------------
 app.include_router(api_router)
