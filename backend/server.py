@@ -44,14 +44,6 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-class MiningSession(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    user_id: str
-    start_time: str
-    status: str
-    xrp_earned: float
-
 # ------------------ HELPERS ------------------
 def create_token(user_id: str) -> str:
     payload = {
@@ -123,16 +115,21 @@ async def login(data: UserLogin):
 async def get_profile(current_user: dict = Depends(get_current_user)):
     return current_user
 
-# ------------------ MINING ------------------
+# ------------------ MINING (FIXED) ------------------
 @api_router.post("/mining/start")
 async def start_mining(current_user: dict = Depends(get_current_user)):
-    active = await db.mining_sessions.find_one({
-        "user_id": current_user["id"],
-        "status": "active"
-    })
+    # ✅ If session exists, return it instead of error
+    active = await db.mining_sessions.find_one(
+        {"user_id": current_user["id"], "status": "active"},
+        {"_id": 0}
+    )
 
     if active:
-        raise HTTPException(status_code=400, detail="Mining already started")
+        return {
+            "success": True,
+            "message": "Mining already active",
+            "session": active
+        }
 
     session = {
         "id": str(uuid.uuid4()),
@@ -161,7 +158,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ------------------ LOGGING ------------------
+# ------------------ SHUTDOWN ------------------
 logging.basicConfig(level=logging.INFO)
 
 @app.on_event("shutdown")
