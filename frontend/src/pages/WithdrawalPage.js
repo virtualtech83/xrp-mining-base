@@ -118,17 +118,15 @@ export default function WithdrawalPage() {
               />
             </div>
 
-            <button
+           /* 🔹 NEW BUTTON  <button
               type="submit"
               disabled={loading}
               className="w-full px-6 py-4 bg-primary text-white font-bold uppercase tracking-wider hover:bg-blue-600 transition-all border border-blue-400/30 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <ArrowDownToLine className="w-5 h-5" />
               {loading ? 'Processing...' : 'Request Withdrawal'}
-            </button>
-          </form>
-
-          {/* 🔹 NEW BUTTON */}
+            </button> */
+                   {/* 🔹 NEW BUTTON */}
           <button
             type="button"
             onClick={() => setShowWithdrawModal(true)}
@@ -136,6 +134,9 @@ export default function WithdrawalPage() {
           >
             Withdraw to Wallet
           </button>
+          </form>
+
+         
 
           <div className="mt-6 bg-white/5 border border-white/10 p-4">
             <p className="text-gray-400 text-xs">
