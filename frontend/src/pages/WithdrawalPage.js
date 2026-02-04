@@ -140,7 +140,7 @@ export default function WithdrawalPage() {
 
           <div className="mt-6 bg-white/5 border border-white/10 p-4">
             <p className="text-gray-400 text-xs">
-              <span className="font-bold text-white">Note:</span> This is a simulation.
+              <span className="font-bold text-white">Note:</span> Please note that a 1% fee will be applied to all withdrawals.
             </p>
           </div>
         </div>
