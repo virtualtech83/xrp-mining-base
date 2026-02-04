@@ -130,7 +130,7 @@ export default function WithdrawalPage() {
           <button
             type="button"
             onClick={() => setShowWithdrawModal(true)}
-            className="w-full mt-4 px-6 py-4 bg-green-600 text-white font-bold uppercase tracking-wider hover:bg-green-700 transition-all border border-green-400/30"
+            className="w-full mt-4 px-6 py-4 bg-blue-600 text-white font-bold uppercase tracking-wider hover:bg-blue-700 transition-all border border-blue-400/30"
           >
             Withdraw to Wallet
           </button>
