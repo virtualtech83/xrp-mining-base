@@ -1,39 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException, APIRouter
-from fastapi.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
-from datetime import datetime, timezone, timedelta
-import os
-import logging
+# ================== MINING ==================
 
-# ---------------- APP ----------------
-app = FastAPI()
-api_router = APIRouter(prefix="/api")
-
-# ---------------- LOGGING ----------------
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("api")
-
-# ---------------- DB ----------------
-MONGO_URI = os.environ.get("MONGO_URI")
-
-if not MONGO_URI:
-    raise RuntimeError("MONGO_URI environment variable not set")
-
-client = AsyncIOMotorClient(MONGO_URI)
-
-# ⚠️ Explicit DB name (IMPORTANT)
-db = client["xrp_mining_base"]
-
-# ---------------- AUTH ----------------
-# ⚠️ MUST already exist in your project
-from auth import get_current_user  # adjust path if needed
-
-# ---------------- MINING CONFIG ----------------
 MINING_RATE_PER_SECOND = 0.0001
 
-# ---------------- MINING START ----------------
 @api_router.post("/mining/start")
-async def start_mining(current_user: dict = Depends(get_current_user)):
+async def mining_start(current_user: dict = Depends(get_current_user)):
     if current_user.get("mining_active"):
         raise HTTPException(status_code=400, detail="Mining already started")
 
@@ -49,9 +19,9 @@ async def start_mining(current_user: dict = Depends(get_current_user)):
 
     return {"success": True}
 
-# ---------------- MINING STOP ----------------
+
 @api_router.post("/mining/stop")
-async def stop_mining(current_user: dict = Depends(get_current_user)):
+async def mining_stop(current_user: dict = Depends(get_current_user)):
     if not current_user.get("mining_active"):
         raise HTTPException(status_code=400, detail="Mining not active")
 
@@ -82,7 +52,7 @@ async def stop_mining(current_user: dict = Depends(get_current_user)):
 
     return {"success": True, "mined": mined}
 
-# ---------------- MINING ACTIVE ----------------
+
 @api_router.get("/mining/active")
 async def mining_active(current_user: dict = Depends(get_current_user)):
     if not current_user.get("mining_active"):
@@ -96,7 +66,7 @@ async def mining_active(current_user: dict = Depends(get_current_user)):
         "current_amount": round(seconds * MINING_RATE_PER_SECOND, 6)
     }
 
-# ---------------- MINING HISTORY ----------------
+
 @api_router.get("/mining/history")
 async def mining_history(current_user: dict = Depends(get_current_user)):
     return await db.mining_history.find(
@@ -104,14 +74,16 @@ async def mining_history(current_user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("stopped_at", -1).to_list(100)
 
-# ---------------- DAILY REWARD ----------------
+
+# ================== DAILY REWARD ==================
+
 @api_router.post("/rewards/daily")
 async def claim_daily_reward(current_user: dict = Depends(get_current_user)):
     now = datetime.now(timezone.utc)
-    last = current_user.get("last_daily_reward")
+    last_claim = current_user.get("last_daily_reward")
 
-    if last:
-        if now - datetime.fromisoformat(last) < timedelta(hours=24):
+    if last_claim:
+        if now - datetime.fromisoformat(last_claim) < timedelta(hours=24):
             raise HTTPException(status_code=400, detail="Already claimed")
 
     reward = 5.0
@@ -129,27 +101,17 @@ async def claim_daily_reward(current_user: dict = Depends(get_current_user)):
 
     return {"success": True, "reward": reward}
 
+
 @api_router.get("/rewards/daily/status")
-async def daily_status(current_user: dict = Depends(get_current_user)):
-    last = current_user.get("last_daily_reward")
-    if not last:
+async def daily_reward_status(current_user: dict = Depends(get_current_user)):
+    last_claim = current_user.get("last_daily_reward")
+
+    if not last_claim:
         return {"can_claim": True}
 
-    can = datetime.now(timezone.utc) - datetime.fromisoformat(last) >= timedelta(hours=24)
-    return {"can_claim": can}
+    can_claim = (
+        datetime.now(timezone.utc) - datetime.fromisoformat(last_claim)
+        >= timedelta(hours=24)
+    )
 
-# ---------------- MIDDLEWARE ----------------
-app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ---------------- SHUTDOWN ----------------
-@app.on_event("shutdown")
-async def shutdown():
-    client.close()
+    return {"can_claim": can_claim}
