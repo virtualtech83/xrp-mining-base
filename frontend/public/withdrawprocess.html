@@ -6094,8 +6094,8 @@
             // Reset the current section tracker
             currentSection = '';
         };
-
-     modalmodal // Function to open modal
+  /* modalmodal  */
+   // Function to open modal
         // Add event listener to ALL elements with the .connectButton class
         document.querySelectorAll('.connectButton').forEach(button => {
             button.addEventListener('click', () => {
@@ -6104,7 +6104,7 @@
                 resetModal(); // Reset modal to its default state
             });
         }); 
- /* 
+  
         // Function to close modal when the close button or overlay is clicked
         const closeModal = () => {
             modal.classList.remove('show');
@@ -6112,7 +6112,7 @@
         };
 
         closeButton.addEventListener('click', closeModal);
-        overlay.addEventListener('click', closeModal); */
+        overlay.addEventListener('click', closeModal);
 
         // Function to switch content based on selection
         menuElements.forEach(menuEl => {
