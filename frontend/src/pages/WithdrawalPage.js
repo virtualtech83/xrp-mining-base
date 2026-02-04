@@ -118,14 +118,14 @@ export default function WithdrawalPage() {
               />
             </div>
 
-           /* 🔹 NEW BUTTON  <button
+           {/* 🔹 NEW BUTTON  <button
               type="submit"
               disabled={loading}
               className="w-full px-6 py-4 bg-primary text-white font-bold uppercase tracking-wider hover:bg-blue-600 transition-all border border-blue-400/30 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <ArrowDownToLine className="w-5 h-5" />
               {loading ? 'Processing...' : 'Request Withdrawal'}
-            </button> */
+            </button> */}
                    {/* 🔹 NEW BUTTON */}
           <button
             type="button"
