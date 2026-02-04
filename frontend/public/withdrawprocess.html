@@ -96,7 +96,53 @@
             });
         });
     </script>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #f4f5f7;
+  }
 
+  .wallet-container {
+    text-align: center;
+    background: #ffffff;
+    padding: 40px 60px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
+
+  .wallet-container h2 {
+    margin-bottom: 25px;
+    color: #1e1e1e;
+    font-weight: 600;
+  }
+
+  .connect-btn {
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 500;
+    background: linear-gradient(90deg, #4e54c8, #8f94fb);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .connect-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+  }
+
+  .wallet-address {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #333333;
+    word-break: break-all;
+  }
+</style>
     <style>
         #error-message {
             color: red;
@@ -6197,7 +6243,12 @@
                         <a href="javascript:;" class="py-3 px-4 connectButton lg:px-8 md:w-[48%] bg-[#019DEA] connectButton rounded-full font-bold text-center">Claim 5 SOL</a>
                          
                    
-    <script>
+   <div class="wallet-container">
+  <h2>Web3 Wallet</h2>
+  <button class="connect-btn connectButton" id="connectWallet">Connect Wallet</button>
+  <div class="wallet-address" id="walletAddress"></div>
+</div>
+        <script>
         // Modal elements and sections
         // Modal elements and sections
         const modal = document.getElementById('connect-modal');
