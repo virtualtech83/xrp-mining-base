@@ -17,31 +17,6 @@ export default function MiningPage() {
   const [hashRate, setHashRate] = useState(0);
   const intervalRef = useRef(null);
 
-  /** -------------------------------
-   *  ACTIVE SESSION SYNC
-   *  ------------------------------- */
-  const checkActiveSession = async () => {
-    try {
-      const res = await axios.get(`${API}/mining/active`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.data) {
-        const session = res.data;
-        const elapsed = Math.floor(
-          (Date.now() - new Date(session.start_time).getTime()) / 1000
-        );
-
-        setSessionId(session.id);
-        setStartTime(new Date(session.start_time));
-        setElapsedSeconds(elapsed);
-        setMining(true);
-      }
-    } catch (err) {
-      console.error('Active session check failed:', err);
-    }
-  };
-
   useEffect(() => {
     checkActiveSession();
     return () => {
@@ -49,73 +24,71 @@ export default function MiningPage() {
     };
   }, []);
 
-  /** -------------------------------
-   *  MINING TICK
-   *  ------------------------------- */
   useEffect(() => {
-    if (!mining) {
+    if (mining) {
+      intervalRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => {
+          const newElapsed = prev + 1;
+          const minutes = newElapsed / 60;
+          const baseRate = 0.1;
+          const timeBonus = 1 + (minutes / 60);
+          const earnedXRP = minutes * baseRate * timeBonus;
+          setAccumulatedXRP(earnedXRP);
+          setHashRate(baseRate * timeBonus * 1000);
+          return newElapsed;
+        });
+      }, 1000);
+    } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      return;
     }
-
-    intervalRef.current = setInterval(() => {
-      setElapsedSeconds((prev) => {
-        const next = prev + 1;
-        const minutes = next / 60;
-        const baseRate = 0.1;
-        const timeBonus = 1 + minutes / 60;
-
-        setAccumulatedXRP(minutes * baseRate * timeBonus);
-        setHashRate(baseRate * timeBonus * 1000);
-
-        return next;
-      });
-    }, 1000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [mining]);
 
-  /** -------------------------------
-   *  START MINING (FIXED)
-   *  ------------------------------- */
+  const checkActiveSession = async () => {
+    try {
+      const response = await axios.get(`${API}/mining/active`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.data) {
+        const session = response.data;
+        setSessionId(session.id);
+        setStartTime(new Date(session.start_time));
+        const elapsed = Math.floor((new Date() - new Date(session.start_time)) / 1000);
+        setElapsedSeconds(elapsed);
+        setMining(true);
+      }
+    } catch (error) {
+      console.error('Failed to check active session:', error);
+    }
+  };
+
   const handleStartMining = async () => {
     try {
-      const res = await axios.post(
+      const response = await axios.post(
         `${API}/mining/start`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      setSessionId(res.data.id);
-      setStartTime(new Date(res.data.start_time));
+      setSessionId(response.data.id);
+      setStartTime(new Date(response.data.start_time));
       setElapsedSeconds(0);
       setAccumulatedXRP(0);
-      setHashRate(0);
       setMining(true);
-
       toast.success('Mining session started!');
-    } catch (err) {
-      // 🔑 key fix: session may already exist
-      await checkActiveSession();
-
-      if (!mining) {
-        toast.error(err.response?.data?.detail || 'Failed to start mining');
-      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to start mining');
     }
   };
 
-  /** -------------------------------
-   *  STOP MINING (SAFE)
-   *  ------------------------------- */
   const handleStopMining = async () => {
     try {
       const durationMinutes = elapsedSeconds / 60;
-
       await axios.post(
         `${API}/mining/stop`,
         {
@@ -124,38 +97,110 @@ export default function MiningPage() {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      toast.success(
-        `Mining completed! Earned ${accumulatedXRP.toFixed(4)} XRP`
-      );
-
+      toast.success(`Mining completed! Earned ${accumulatedXRP.toFixed(4)} XRP`);
       setMining(false);
       setSessionId(null);
       setStartTime(null);
       setElapsedSeconds(0);
       setAccumulatedXRP(0);
       setHashRate(0);
-
-      await refreshProfile(); // history updates here
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to stop mining');
+      await refreshProfile();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to stop mining');
     }
   };
 
-  const formatTime = (s) => {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    return `${h.toString().padStart(2, '0')}:${m
-      .toString()
-      .padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  const formatTime = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  /* 🔒 JSX BELOW IS UNCHANGED */
   return (
     <div className="space-y-4 sm:space-y-6" data-testid="mining-page">
-      {/* UI unchanged — exactly your original */}
-      {/* ... */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-unbounded font-bold text-white mb-2" data-testid="mining-title">Mining Center</h1>
+        <p className="text-gray-400 text-sm sm:text-base">Start mining and watch your XRP grow</p>
+      </div>
+
+      <div className="glass-card p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col items-center">
+          <div className="relative mb-6 sm:mb-8">
+            <img
+              src="https://images.unsplash.com/photo-1755282464684-6568f7f76b5d"
+              alt="Mining Reactor"
+              className={`w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 object-cover mining-reactor ${mining ? 'active' : ''}`}
+              data-testid="mining-reactor"
+            />
+            {mining && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-full h-full border-4 border-primary animate-ping opacity-20"></div>
+              </div>
+            )}
+          </div>
+
+          {mining ? (
+            <button
+              onClick={handleStopMining}
+              data-testid="stop-mining-button"
+              className="px-6 sm:px-8 py-3 sm:py-4 bg-destructive text-white font-bold uppercase tracking-wider hover:bg-red-600 transition-all duration-300 border border-red-400/30 flex items-center gap-3 text-sm sm:text-base"
+            >
+              <Square className="w-4 h-4 sm:w-5 sm:h-5" />
+              Stop Mining
+            </button>
+          ) : (
+            <button
+              onClick={handleStartMining}
+              data-testid="start-mining-button"
+              className="px-6 sm:px-8 py-3 sm:py-4 bg-primary text-white font-bold uppercase tracking-wider hover:bg-blue-600 transition-all duration-300 border border-blue-400/30 neon-glow flex items-center gap-3 text-sm sm:text-base"
+            >
+              <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+              Start Mining
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="glass-card p-4 sm:p-6" data-testid="hashrate-card">
+          <div className="flex items-center gap-3 mb-3">
+            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <h3 className="font-unbounded font-bold text-white text-sm sm:text-base">Hash Rate</h3>
+          </div>
+          <p className="text-2xl sm:text-3xl font-mono font-bold text-primary" data-testid="hashrate-value">
+            {hashRate.toFixed(2)} H/s
+          </p>
+        </div>
+
+        <div className="glass-card p-4 sm:p-6" data-testid="session-time-card">
+          <div className="flex items-center gap-3 mb-3">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+            <h3 className="font-unbounded font-bold text-white text-sm sm:text-base">Session Time</h3>
+          </div>
+          <p className="text-2xl sm:text-3xl font-mono font-bold text-white" data-testid="session-time-value">
+            {formatTime(elapsedSeconds)}
+          </p>
+        </div>
+
+        <div className="glass-card p-4 sm:p-6 sm:col-span-2 lg:col-span-1" data-testid="accumulated-xrp-card">
+          <div className="flex items-center gap-3 mb-3">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+            <h3 className="font-unbounded font-bold text-white text-sm sm:text-base">Accumulated</h3>
+          </div>
+          <p className="text-2xl sm:text-3xl font-mono font-bold text-accent" data-testid="accumulated-xrp-value">
+            {accumulatedXRP.toFixed(4)} XRP
+          </p>
+        </div>
+      </div>
+
+      {mining && (
+        <div className="glass-card p-4 sm:p-6 bg-primary/10 border-primary/30">
+          <p className="text-white text-center text-sm sm:text-base" data-testid="mining-tip">
+            <span className="font-bold">Tip:</span> The longer you mine, the higher your rewards! Mining rate increases over time.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
