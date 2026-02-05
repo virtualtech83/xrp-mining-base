@@ -58,9 +58,10 @@ def verify_password(password: str, hashed: str) -> bool:
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        user = await db.users.find_one({"id": payload["user_id"]}, {"_id": 0})
+        user = await db.users.find_one({"id": payload["user_id"]})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
+        user["_id"] = str(user["_id"])  # convert ObjectId to str
         return user
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
@@ -101,13 +102,18 @@ async def profile(current_user: dict = Depends(get_current_user)):
     return current_user
 
 # ------------------ MINING ------------------
+def serialize_session(session: dict) -> dict:
+    session = session.copy()
+    if "_id" in session:
+        session["_id"] = str(session["_id"])
+    return session
+
 @api_router.get("/mining/active")
 async def mining_active(current_user: dict = Depends(get_current_user)):
     session = await db.mining_sessions.find_one(
-        {"user_id": current_user["id"], "status": "active"},
-        {"_id": 0}
+        {"user_id": current_user["id"], "status": "active"}
     )
-    return session or {"active": False}
+    return serialize_session(session) if session else {"active": False}
 
 @api_router.post("/mining/start")
 async def mining_start(current_user: dict = Depends(get_current_user)):
@@ -115,7 +121,7 @@ async def mining_start(current_user: dict = Depends(get_current_user)):
         {"user_id": current_user["id"], "status": "active"}
     )
     if existing:
-        return {"success": True, "session": existing}
+        return {"success": True, "session": serialize_session(existing)}
 
     session = {
         "id": str(uuid.uuid4()),
@@ -125,7 +131,7 @@ async def mining_start(current_user: dict = Depends(get_current_user)):
         "xrp_earned": 0.0
     }
     await db.mining_sessions.insert_one(session)
-    return {"success": True, "session": session}
+    return {"success": True, "session": serialize_session(session)}
 
 @api_router.post("/mining/stop")
 async def mining_stop(current_user: dict = Depends(get_current_user)):
@@ -139,7 +145,7 @@ async def mining_stop(current_user: dict = Depends(get_current_user)):
     now = datetime.now(timezone.utc)
     minutes = max((now - start).total_seconds() / 60, 1)
 
-    # 🔥 Increasing rate logic
+    # Mining rate logic
     base_rate = 0.01
     bonus = min(minutes / 60, 3)
     earned = round(minutes * (base_rate + bonus * 0.005), 6)
@@ -159,14 +165,19 @@ async def mining_stop(current_user: dict = Depends(get_current_user)):
         {"$inc": {"xrp_balance": earned, "total_mined": earned}}
     )
 
-    return {"success": True, "earned": earned}
+    session["status"] = "completed"
+    session["end_time"] = now.isoformat()
+    session["duration_minutes"] = minutes
+    session["xrp_earned"] = earned
+
+    return {"success": True, "earned": earned, "session": serialize_session(session)}
 
 @api_router.get("/mining/history")
 async def mining_history(current_user: dict = Depends(get_current_user)):
-    return await db.mining_sessions.find(
-        {"user_id": current_user["id"], "status": "completed"},
-        {"_id": 0}
+    sessions = await db.mining_sessions.find(
+        {"user_id": current_user["id"], "status": "completed"}
     ).sort("start_time", -1).to_list(100)
+    return [serialize_session(s) for s in sessions]
 
 # ------------------ DAILY REWARD ------------------
 @api_router.post("/rewards/daily")
@@ -217,4 +228,3 @@ logging.basicConfig(level=logging.INFO)
 @app.on_event("shutdown")
 async def shutdown():
     client.close()
-
