@@ -217,3 +217,4 @@ logging.basicConfig(level=logging.INFO)
 @app.on_event("shutdown")
 async def shutdown():
     client.close()
+
