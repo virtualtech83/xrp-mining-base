@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { Play, Square, Zap, Clock, TrendingUp } from 'lucide-react';
+import { Clock, TrendingUp } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
 
 export default function MiningPage() {
   const { token, refreshProfile } = useAuth();
