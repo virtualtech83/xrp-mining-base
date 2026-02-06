@@ -43,14 +43,16 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-unbounded font-bold text-white mb-6" data-testid="hero-title">
-            MINE XRP.
+            FREE
+<br />
+            XRP MINING.
             <br />
-            <span className="text-primary">SIMULATE WEALTH.</span>
+            <span className="text-primary">BUILD REAL WEALTH.</span>
             <br />
             DOMINATE.
           </h1>
           <p className="text-lg sm:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Experience the thrill of XRP mining in a realistic simulation. Start mining, earn rewards, and climb the leaderboard.
+            Experience the thrill of real XRP mining. Start earning XRP in real time with a live, fully functional mining system. Start mining, earn rewards, and climb the leaderboard.
           </p>
           <button
             onClick={() => navigate('/auth')}
@@ -94,7 +96,7 @@ export default function LandingPage() {
 
       <footer className="py-8 bg-black/90 border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-400 text-sm">
-          <p>© 2025 XRP Mining Base. All rights reserved. This is a simulation platform for entertainment purposes.</p>
+          <p>© 2026 XRP Mining Base. All rights reserved. This is a Live platform for XRP MINING.</p>
         </div>
       </footer>
     </div>
