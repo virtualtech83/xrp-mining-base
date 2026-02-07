@@ -33,17 +33,14 @@ export default function LeaderboardPage() {
     return null;
   };
 
-  const isCurrentUser = (email) => {
-    return user?.email === email;
+  const isCurrentUser = (id) => {
+    return user?.id === id;
   };
 
   return (
     <div className="space-y-6" data-testid="leaderboard-page">
       <div>
-        <h1
-          className="text-4xl font-unbounded font-bold text-white mb-2"
-          data-testid="leaderboard-title"
-        >
+        <h1 className="text-4xl font-unbounded font-bold text-white mb-2">
           Leaderboard
         </h1>
         <p className="text-gray-400">
@@ -53,47 +50,32 @@ export default function LeaderboardPage() {
 
       <div className="glass-card p-6">
         {loading ? (
-          <p
-            className="text-gray-400"
-            data-testid="loading-leaderboard"
-          >
-            Loading leaderboard...
-          </p>
+          <p className="text-gray-400">Loading leaderboard...</p>
         ) : leaderboard.length > 0 ? (
           <div className="space-y-2">
             {leaderboard.map((entry) => (
               <div
                 key={entry.rank}
                 className={`flex items-center justify-between p-4 transition-all duration-200 ${
-                  isCurrentUser(entry.email)
+                  isCurrentUser(entry.id)
                     ? 'bg-primary/20 border-2 border-primary'
                     : 'bg-white/5 border border-white/10 hover:bg-white/10'
                 }`}
-                data-testid="leaderboard-entry"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 text-center">
                     {getRankIcon(entry.rank) || (
-                      <span
-                        className="text-gray-400 font-mono font-bold"
-                        data-testid="entry-rank"
-                      >
+                      <span className="text-gray-400 font-mono font-bold">
                         #{entry.rank}
                       </span>
                     )}
                   </div>
 
                   <div>
-                    <p
-                      className="text-white font-mono font-bold"
-                      data-testid="entry-email"
-                    >
-                      {entry.email}
-                      {isCurrentUser(entry.email) && (
-                        <span
-                          className="ml-2 text-xs text-primary"
-                          data-testid="you-badge"
-                        >
+                    <p className="text-white font-mono font-bold">
+                      {entry.id}
+                      {isCurrentUser(entry.id) && (
+                        <span className="ml-2 text-xs text-primary">
                           (You)
                         </span>
                       )}
@@ -102,10 +84,7 @@ export default function LeaderboardPage() {
                 </div>
 
                 <div className="text-right">
-                  <p
-                    className="text-accent font-mono font-bold text-lg"
-                    data-testid="entry-total-mined"
-                  >
+                  <p className="text-accent font-mono font-bold text-lg">
                     {entry.total_mined?.toFixed(4)} XRP
                   </p>
                 </div>
@@ -113,28 +92,11 @@ export default function LeaderboardPage() {
             ))}
           </div>
         ) : (
-          <p
-            className="text-gray-400"
-            data-testid="no-leaderboard"
-          >
+          <p className="text-gray-400">
             No miners yet. Be the first to start mining!
           </p>
         )}
       </div>
-
-      {user && leaderboard.length > 0 && (
-        <div
-          className="glass-card p-6 bg-primary/10 border-primary/30"
-          data-testid="leaderboard-tip"
-        >
-          <p className="text-white text-center">
-            <span className="font-bold">
-              Keep mining to climb the ranks!
-            </span>{' '}
-            The more you mine, the higher you'll be on the leaderboard.
-          </p>
-        </div>
-      )}
     </div>
   );
 }
