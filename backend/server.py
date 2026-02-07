@@ -206,11 +206,24 @@ async def daily_status(current_user: dict = Depends(get_current_user)):
     next_time = datetime.fromisoformat(last) + timedelta(hours=24)
     return {"can_claim": datetime.now(timezone.utc) >= next_time, "next_claim_time": next_time.isoformat()}
 
+
 # ------------------ LEADERBOARD ------------------
 @api_router.get("/leaderboard")
 async def leaderboard():
-    users = await db.users.find({}, {"_id": 0, "email": 1, "total_mined": 1}).sort("total_mined", -1).limit(100).to_list(100)
-    return [{"rank": i + 1, **u} for i, u in enumerate(users)]
+    users = await db.users.find(
+        {},
+        {"_id": 0, "id": 1, "total_mined": 1}
+    ).sort("total_mined", -1).limit(100).to_list(100)
+
+    return [
+        {
+            "rank": i + 1,
+            "id": u["id"],
+            "total_mined": u.get("total_mined", 0.0)
+        }
+        for i, u in enumerate(users)
+    ]
+
 
 # ------------------ FINAL SETUP ------------------
 app.include_router(api_router)
