@@ -1,2 +1,2 @@
 # Here are your Instructions
-#Contact admin on telegram @buythedipidiot
+Contact admin on telegram @buythedipidiot
